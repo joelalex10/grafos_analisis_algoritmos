@@ -14,6 +14,8 @@ public class Nodo {
 	private int rec1;
 	private int rec2;
 	private int nroActividad;
+	private boolean origenAsignacion;
+	private  boolean destinoAsignacion;
 	
 	
 	
@@ -77,6 +79,22 @@ public class Nodo {
 
 	public void setRec2(int rec2) {
 		this.rec2 = rec2;
+	}
+
+	public boolean isOrigenAsignacion() {
+		return origenAsignacion;
+	}
+
+	public void setOrigenAsignacion(boolean origenAsignacion) {
+		this.origenAsignacion = origenAsignacion;
+	}
+
+	public boolean isDestinoAsignacion() {
+		return destinoAsignacion;
+	}
+
+	public void setDestinoAsignacion(boolean destinoAsignacion) {
+		this.destinoAsignacion = destinoAsignacion;
 	}
 
 	@Override

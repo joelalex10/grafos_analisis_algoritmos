@@ -44,6 +44,7 @@ public class VentanaPrincipal {
 	Object [][]mat;
 	String []lista;
 	int index = 0;
+	boolean isAsignacion=false;
 	
 	public String titleWindow= "GENERACION DE GRAFOS";
 
@@ -563,6 +564,46 @@ public class VentanaPrincipal {
 		btnNewButton_1_3_2_1.setBackground(new Color(21, 88, 16));
 		btnNewButton_1_3_2_1.setBounds(663, 52, 160, 30);
 		panel_1.add(btnNewButton_1_3_2_1);
+
+
+		JButton btnAsignacion = new JButton("ASIGNACION");
+		btnAsignacion.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+
+				isAsignacion=true;
+				if(lienzo.vectorNodos.isEmpty() && lienzo.vectorEnlace.isEmpty()){
+
+					String  stringValOrigen = JOptionPane.showInputDialog("INTRODUCE EL MAXIMO DE NODOS DE ORIGEN");
+					int valOrigen = Integer.parseInt(stringValOrigen);
+					JOptionPane.showMessageDialog(null,"PORFAVOR INGRESE LOS "+valOrigen+" NODOS DE ORIGEN");
+					if(lienzo.vectorNodos.size()==valOrigen){
+						String  stringValDestino = JOptionPane.showInputDialog("INTRODUCE EL MAXIMO DE NODOS DE DESTINO");
+						int valDestino = Integer.parseInt(stringValOrigen);
+						JOptionPane.showMessageDialog(null,"PORFAVOR INGRESE LOS "+valDestino+" NODOS DE DESTINO");
+					}
+
+
+
+
+
+
+					System.out.println("SE EJECUTARA EL ALGORITMO DE JOHNSON");
+				}else{
+					JOptionPane.showMessageDialog(null,"NO SE DEBEN TENER ELEMENTOS EN PANTALLA PARA REALIZAR ESTA ACCION");
+				}
+
+
+
+
+
+			}
+		});
+		btnAsignacion.setForeground(Color.WHITE);
+		btnAsignacion.setFont(new Font("Nirmala UI Semilight", Font.BOLD, 13));
+		btnAsignacion.setBackground(new Color(21, 88, 16));
+		btnAsignacion.setBounds(25, 52, 160, 30);
+		panel_1.add(btnAsignacion);
+
 		
 		
 		
