@@ -17,30 +17,23 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 public class Lienzo extends JPanel implements MouseListener, MouseMotionListener {
-	
-	public Vector<Nodo>vectorNodos;
-	public Vector<Enlace>vectorEnlace;
+
+	private VentanaPrincipal ventanaPrincipal;
+
 	public Point p1, p2;
 	
-	Grafos g;
-	ArrayList<String>vertices;
-	HashMap<String,Integer> aux;
-	
 	private Nodo nodoMover;
-	public int indexNodo; 
+	public int indexNodo;
 	
 	
-	public Lienzo() {
+	public Lienzo(VentanaPrincipal ventanaPrincipal) {
 		this.setBackground(new Color(66,68,65));
 		this.setBounds(0, 0, 400, 300);
-		
-		this.vectorNodos=new Vector<>();
-		this.vectorEnlace= new Vector<>();
+
+		this.ventanaPrincipal = ventanaPrincipal;
 		this.addMouseListener(this);
 		this.addMouseMotionListener(this);
-		
-		g = new Grafos();
-		vertices=new ArrayList<String>();
+
 		
 		
 	}
@@ -49,11 +42,11 @@ public class Lienzo extends JPanel implements MouseListener, MouseMotionListener
 	public void paint(Graphics g) {
 		super.paint(g);
 		
-		for(Nodo nodos : vectorNodos) {
+		for(Nodo nodos : ventanaPrincipal.vectorNodos) {
 			nodos.pintar(g);
 		}
 		
-		for(Enlace enlace:vectorEnlace) {
+		for(Enlace enlace:ventanaPrincipal.vectorEnlace) {
 			enlace.pintar(g);
 		}
 		
@@ -66,6 +59,7 @@ public class Lienzo extends JPanel implements MouseListener, MouseMotionListener
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		if(e.getButton() == MouseEvent.BUTTON1) {
+
 			try {
 				String nombre = JOptionPane.showInputDialog("Ingrese nombre a nodo");
 				if(nombre.isEmpty()==false) {
@@ -74,11 +68,11 @@ public class Lienzo extends JPanel implements MouseListener, MouseMotionListener
 					nodo.setY(e.getY());
 					nodo.setNombre(nombre);
 					nodo.setColor(new Color(9,11,48));
-					nodo.setNroActividad(vectorNodos.size());
-					vertices.add(nombre);
-					this.vectorNodos.add(nodo);
-					aux = new HashMap<String,Integer>();
-					g.crearVertice(nombre, aux);
+					nodo.setNroActividad(ventanaPrincipal.vectorNodos.size());
+					ventanaPrincipal.vertices.add(nombre);
+					this.ventanaPrincipal.vectorNodos.add(nodo);
+					ventanaPrincipal.aux = new HashMap<String,Integer>();
+					ventanaPrincipal.g.crearVertice(nombre, ventanaPrincipal.aux);
 					repaint();
 				}else {
 					JOptionPane.showMessageDialog(null, "DEBE INGRESAR UN VALOR VALIDO");
@@ -90,7 +84,7 @@ public class Lienzo extends JPanel implements MouseListener, MouseMotionListener
 		
 		if(e.getButton() == MouseEvent.BUTTON3) {
 			
-			for(Nodo nodo: vectorNodos) {
+			for(Nodo nodo: ventanaPrincipal.vectorNodos) {
 				
 				
 				String val = "";
@@ -99,7 +93,7 @@ public class Lienzo extends JPanel implements MouseListener, MouseMotionListener
 						Nodo.d/2, Nodo.d*3, Nodo.d).contains(e.getPoint())) {
 					
 					if(p1 == null) {
-						indexNodo = vectorNodos.indexOf(nodo);
+						indexNodo = ventanaPrincipal.vectorNodos.indexOf(nodo);
 						nodo.setColor(Color.green);
 						repaint();
 						p1 = new Point(nodo.getX(), nodo.getY());
@@ -107,10 +101,10 @@ public class Lienzo extends JPanel implements MouseListener, MouseMotionListener
 					else {	
 						Nodo auxiliar = null;
 						int indexAuxiliar = 0;
-						for (int i=0;i<vectorNodos.size();i++) {
-							if(vectorNodos.get(i).getX()==p1.getX() &&
-									vectorNodos.get(i).getY()==p1.getY()) {
-								auxiliar = vectorNodos.get(i);
+						for (int i=0;i<ventanaPrincipal.vectorNodos.size();i++) {
+							if(ventanaPrincipal.vectorNodos.get(i).getX()==p1.getX() &&
+									ventanaPrincipal.vectorNodos.get(i).getY()==p1.getY()) {
+								auxiliar = ventanaPrincipal.vectorNodos.get(i);
 								indexAuxiliar = i;
 							}
 						}
@@ -119,8 +113,8 @@ public class Lienzo extends JPanel implements MouseListener, MouseMotionListener
 						nodo.setColor(Color.green);
 						repaint();
 						
-						boolean isConnected = g.isConnected(nodo.getNombre(), auxiliar.getNombre());
-						boolean auxConnected = g.isConnected(auxiliar.getNombre(), nodo.getNombre());
+						boolean isConnected = ventanaPrincipal.g.isConnected(nodo.getNombre(), auxiliar.getNombre());
+						boolean auxConnected = ventanaPrincipal.g.isConnected(auxiliar.getNombre(), nodo.getNombre());
 						boolean isNodoEquals;
 						if(auxConnected) {
 							
@@ -154,10 +148,10 @@ public class Lienzo extends JPanel implements MouseListener, MouseMotionListener
 									enlace.setCiclo(true);
 									enlace.setNroActividadNodoInicio(auxiliar.getNroActividad());
 									enlace.setNroActividadNodoFin(nodo.getNroActividad());
-									this.vectorEnlace.add(enlace);
-									
-									aux = g.getVertice(auxiliar.getNombre());
-									aux.put(nodo.getNombre(),atributo);
+									this.ventanaPrincipal.vectorEnlace.add(enlace);
+
+									ventanaPrincipal.aux = ventanaPrincipal.g.getVertice(auxiliar.getNombre());
+									ventanaPrincipal.aux.put(nodo.getNombre(),atributo);
 									
 								}catch(NumberFormatException numE) {
 									JOptionPane.showMessageDialog(null, "Debe ingresar un valor numerico");
@@ -190,11 +184,11 @@ public class Lienzo extends JPanel implements MouseListener, MouseMotionListener
 										enlace.setCiclo(false);
 										enlace.setNroActividadNodoInicio(auxiliar.getNroActividad());
 										enlace.setNroActividadNodoFin(nodo.getNroActividad());
-										System.out.println("la actividad es"+vectorEnlace.size());
+										System.out.println("la actividad es"+ventanaPrincipal.vectorEnlace.size());
 										//vectorNodos.get(indexAuxiliar).getEnlaceSalientes().add(enlace);
 										//nodo.getEnlaceEntrantes().add(enlace);
 										
-										this.vectorEnlace.add(enlace);
+										this.ventanaPrincipal.vectorEnlace.add(enlace);
 										
 									}else {
 										
@@ -220,11 +214,11 @@ public class Lienzo extends JPanel implements MouseListener, MouseMotionListener
 										System.out.println(vectorNodos.get(indexAuxiliar).getEnlaceSalientes());
 										System.out.println(nodo.getEnlaceEntrantes());*/
 										
-										this.vectorEnlace.add(enlace);
+										this.ventanaPrincipal.vectorEnlace.add(enlace);
 									}
-									
-									aux = g.getVertice(auxiliar.getNombre());
-									aux.put(nodo.getNombre(),atributo);
+
+									ventanaPrincipal.aux = ventanaPrincipal.g.getVertice(auxiliar.getNombre());
+									ventanaPrincipal.aux.put(nodo.getNombre(),atributo);
 									
 									//System.out.println("inicio: "+auxiliar.getNombre());
 									//System.out.println("final: "+nodo.getNombre());
@@ -273,7 +267,7 @@ public class Lienzo extends JPanel implements MouseListener, MouseMotionListener
 	@Override
 	public void mousePressed(MouseEvent e) {
 		int cont =0;
-		for(Nodo nodo : vectorNodos) {
+		for(Nodo nodo : ventanaPrincipal.vectorNodos) {
 			if(new Rectangle(nodo.getX() - Nodo.d/2, nodo.getY() 
 					- Nodo.d/2, Nodo.d*3, Nodo.d ).contains(e.getPoint())) {
 				nodoMover = nodo;
@@ -296,36 +290,13 @@ public class Lienzo extends JPanel implements MouseListener, MouseMotionListener
 	}
 	
 	public ArrayList<String> getVertices() {
-		return vertices;
+		return ventanaPrincipal.vertices;
 		
 	}
 
 	public void setVertices(ArrayList<String> vertices) {
-		this.vertices = vertices;
+		this.ventanaPrincipal.vertices = vertices;
 	}
-
-	public Object[][] retornoMatriz(){
-		
-		int tam=vertices.size();
-		Object mat[][]=new Object[tam][tam];
-		
-		for(int i=0;i<vertices.size();i++) {
-			
-			for(int j=0;j<vertices.size();j++) {
-				
-				if(g.getVertice(vertices.get(i)).get(vertices.get(j))==null){
-					//System.out.print(0+"\t");
-					mat[i][j] = 0;
-				}else {
-					//System.out.print(g.getVertice(vertices.get(i)).get(vertices.get(j))+"\t");
-					mat[i][j] = g.getVertice(vertices.get(i)).get(vertices.get(j));
-					}
-				}
-		}
-		
-		return mat;
-	}
-
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		if(nodoMover != null) {
@@ -340,10 +311,10 @@ public class Lienzo extends JPanel implements MouseListener, MouseMotionListener
 			//nodo.setEnlaceSalientes(nodoMover.getEnlaceSalientes());
 			
 			
-			this.vectorNodos.set(indexNodo, nodo);
+			this.ventanaPrincipal.vectorNodos.set(indexNodo, nodo);
 			
 			int indexEnlace = 0;
-			for(Enlace enlace: vectorEnlace) {
+			for(Enlace enlace: ventanaPrincipal.vectorEnlace) {
 				if(new Rectangle(enlace.getX1()- Nodo.d/2, enlace.getY1() - Nodo.d/2, Nodo.d*3, Nodo.d).contains(e.getPoint())) {
 					
 					Enlace enlaceAux = new Enlace();
@@ -360,7 +331,7 @@ public class Lienzo extends JPanel implements MouseListener, MouseMotionListener
 					enlaceAux.setCiclo(enlace.isCiclo());
 					enlaceAux.setNroActividadNodoInicio(enlace.getNroActividadNodoInicio());
 					enlaceAux.setNroActividadNodoFin(enlace.getNroActividadNodoFin());
-					this.vectorEnlace.set(indexEnlace,enlaceAux);
+					this.ventanaPrincipal.vectorEnlace.set(indexEnlace,enlaceAux);
 					//System.out.println("MOVISTE");
 				}
 				
@@ -380,7 +351,7 @@ public class Lienzo extends JPanel implements MouseListener, MouseMotionListener
 					enlaceAux.setCiclo(enlace.isCiclo());
 					enlaceAux.setNroActividadNodoInicio(enlace.getNroActividadNodoInicio());
 					enlaceAux.setNroActividadNodoFin(enlace.getNroActividadNodoFin());
-					this.vectorEnlace.set(indexEnlace, enlaceAux);
+					this.ventanaPrincipal.vectorEnlace.set(indexEnlace, enlaceAux);
 					//System.out.println(enlace.getAtributo());
 				}
 				indexEnlace++;	

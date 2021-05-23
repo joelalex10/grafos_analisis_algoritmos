@@ -1,10 +1,6 @@
 package windows;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.EventQueue;
-import java.awt.Font;
-import java.awt.Rectangle;
+import java.awt.*;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -26,6 +22,7 @@ import Database.EnlaceBDD;
 import Database.GrafoBDD;
 import Database.NodoBDD;
 import grafos.Enlace;
+import grafos.Grafos;
 import grafos.Nodo;
 
 import javax.swing.JButton;
@@ -36,17 +33,28 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.awt.event.ActionEvent;
+import java.util.Vector;
 
 public class VentanaPrincipal {
 
 	public JFrame frame;
 	Lienzo lienzo;
+	LienzoAsignacion lienzoAsignacion;
 	Object [][]mat;
 	String []lista;
 	int index = 0;
 	boolean isAsignacion=false;
-	
 	public String titleWindow= "GENERACION DE GRAFOS";
+
+	Grafos g;
+	ArrayList<String>vertices;
+	HashMap<String,Integer> aux;
+
+	public Vector<Nodo> vectorNodos;
+	public Vector<Enlace>vectorEnlace;
+
+
+
 
 	/**
 	 * Launch the application.
@@ -77,16 +85,24 @@ public class VentanaPrincipal {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
-		
+
+
+		g = new Grafos();
+		vertices= new ArrayList<String>();
+		aux = new HashMap<String,Integer>();
+		vectorNodos =new Vector<Nodo>();
+		vectorEnlace = new Vector<Enlace>();
+
+		int heightFrame = 647;
+
+
 		frame = new JFrame(titleWindow);
-		frame.setBounds(100, 100, 890, 647);
+		frame.setBounds(100, 100, 890, heightFrame);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
-		
-		JPanel panel = new JPanel();
-		panel.setBounds(100,100, 850, 500);
-		lienzo = new Lienzo();
-		lienzo.setBounds(0, 0, 864, 500);
+
+		lienzo = new Lienzo(this);
+		lienzo.setBounds(0, 0, 864, heightFrame-147);
 		frame.getContentPane().add(lienzo);
 		
 		JPanel panel_1 = new JPanel();
@@ -97,9 +113,8 @@ public class VentanaPrincipal {
 		JButton btnNewButton = new JButton("VER MATRIZ");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				//System.out.println("");
 				
-				mat = lienzo.retornoMatriz();
+				mat = retornoMatriz();
 				ArrayList<String>variables = lienzo.getVertices();
 				lista = new String[variables.size()];
 				
@@ -126,22 +141,22 @@ public class VentanaPrincipal {
 				
 				if(lienzo.p1 !=null) {
 					int pos = lienzo.indexNodo;
-					Nodo nodoSeleccionado = lienzo.vectorNodos.get(pos);
+					Nodo nodoSeleccionado = vectorNodos.get(pos);
 					//System.out.println(pos);
 					int option = JOptionPane.showConfirmDialog(null, "ESTA SEGURO DE BORRAR EL NODO");
 					
 					if(option==0) {
 						//System.out.println("NODO BORRADO");
-						lienzo.vectorNodos.remove(pos);
-						lienzo.vertices.remove(pos);
+						vectorNodos.remove(pos);
+						vertices.remove(pos);
 						lienzo.p1 = null;
 						ArrayList<Integer>indexListEnlace = new ArrayList<Integer>();
 						
 						int cont = 0;
-						for(int i=0;i<lienzo.vectorEnlace.size();i++) {
+						for(int i=0;i<vectorEnlace.size();i++) {
 							
-							String nodoNombreFin = lienzo.vectorEnlace.get(i).getNodoFin().getNombre();
-							String nodoNombreInicio= lienzo.vectorEnlace.get(i).getNodoInicio().getNombre();
+							String nodoNombreFin = vectorEnlace.get(i).getNodoFin().getNombre();
+							String nodoNombreInicio= vectorEnlace.get(i).getNodoInicio().getNombre();
 							String nombre = nodoSeleccionado.getNombre();
 							
 							if(nodoNombreInicio.equals(nombre)) {
@@ -163,10 +178,10 @@ public class VentanaPrincipal {
 						//System.out.println("EL TAMAÑO ES: "+indexListEnlace.size());
 						for(int i=0;i<indexListEnlace.size();i++) {
 							int posEnlace = indexListEnlace.get(i);
-							lienzo.vectorEnlace.remove(posEnlace-i);
+							vectorEnlace.remove(posEnlace-i);
 						}
 						
-						lienzo.g.eliminarVertice(nodoSeleccionado.getNombre(), lienzo.vertices,lienzo.aux);
+						g.eliminarVertice(nodoSeleccionado.getNombre(), vertices,aux);
 						lienzo.repaint();
 						
 						
@@ -175,7 +190,7 @@ public class VentanaPrincipal {
 						nodoSeleccionado.setColor(new Color(9,11,48));
 						lienzo.repaint();
 						
-						lienzo.aux.remove(nodoSeleccionado.getNombre());
+						aux.remove(nodoSeleccionado.getNombre());
 						
 						lienzo.p1 = null;
 						
@@ -192,18 +207,19 @@ public class VentanaPrincipal {
 		btnNewButton_1.setBackground(new Color(21, 88, 16));
 		btnNewButton_1.setBounds(25, 11, 160, 30);
 		panel_1.add(btnNewButton_1);
+
 		
 		JButton btnNewButton_1_2 = new JButton("EDITAR NODO");
 		btnNewButton_1_2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if(lienzo.p1 != null) {
 					int pos = lienzo.indexNodo;
-					Nodo nodoSeleccionado = lienzo.vectorNodos.get(pos);
+					Nodo nodoSeleccionado = vectorNodos.get(pos);
 					String nombre = JOptionPane.showInputDialog("Ingrese el nuevo nombre del nodo");
 					String auxNombre = nodoSeleccionado.getNombre();
 					nodoSeleccionado.setNombre(nombre);
 					nodoSeleccionado.setColor(new Color(9,11,48));
-					for(Enlace enlace:lienzo.vectorEnlace) {
+					for(Enlace enlace:vectorEnlace) {
 						if(enlace.getNodoInicio().getNombre().equals(auxNombre)) {
 							enlace.getNodoInicio().setNombre(nombre);
 						}
@@ -212,7 +228,7 @@ public class VentanaPrincipal {
 						}
 					}
 					
-					lienzo.g.editarVertice(auxNombre, nombre, lienzo.aux, lienzo.vertices);
+					g.editarVertice(auxNombre, nombre, aux, vertices);
 					lienzo.repaint();
 					lienzo.p1 =null;
 					
@@ -234,7 +250,7 @@ public class VentanaPrincipal {
 				String valorB = JOptionPane.showInputDialog("Ingrese el nombre del Nodo de Finalizacion del enlace");
 				boolean isChange = false;
 				
-				for(Enlace enlace: lienzo.vectorEnlace) {
+				for(Enlace enlace: vectorEnlace) {
 					if(valorA.equals(enlace.getNodoInicio().getNombre()) && valorB.equals(enlace.getNodoFin().getNombre())) {
 						isChange=true;
 					}
@@ -244,13 +260,13 @@ public class VentanaPrincipal {
 						String cadNewValue = JOptionPane.showInputDialog("Ingrese el nuevo valor del atributo");
 						int newValue = Integer.parseInt(cadNewValue);
 						
-						for(Enlace enlace: lienzo.vectorEnlace) {
+						for(Enlace enlace: vectorEnlace) {
 							
 							if(valorA.equals(enlace.getNodoInicio().getNombre()) && valorB.equals(enlace.getNodoFin().getNombre())) {
 								enlace.setAtributo(newValue);
 							}
 						}
-						lienzo.g.editarEnlace(valorA, valorB, newValue, lienzo.aux, lienzo.vertices);
+						g.editarEnlace(valorA, valorB, newValue, aux, vertices);
 						lienzo.repaint();
 						
 					}catch(NumberFormatException e) {
@@ -281,20 +297,20 @@ public class VentanaPrincipal {
 				String valorB = JOptionPane.showInputDialog("Ingrese el nombre del Nodo de Finalizacion del enlace");
 				boolean isChange = false;
 				
-				for(Enlace enlace: lienzo.vectorEnlace) {
+				for(Enlace enlace: vectorEnlace) {
 					if(valorA.equals(enlace.getNodoInicio().getNombre()) && valorB.equals(enlace.getNodoFin().getNombre())) {
 						isChange=true;
 					}
 				}
 				if(isChange) {
 					
-					for(int i=0;i<lienzo.vectorEnlace.size();i++) {
-						if(valorA.equals(lienzo.vectorEnlace.get(i).getNodoInicio().getNombre()) &&
-								valorB.equals(lienzo.vectorEnlace.get(i).getNodoFin().getNombre())) {
-							lienzo.vectorEnlace.remove(i);
+					for(int i=0;i<vectorEnlace.size();i++) {
+						if(valorA.equals(vectorEnlace.get(i).getNodoInicio().getNombre()) &&
+								valorB.equals(vectorEnlace.get(i).getNodoFin().getNombre())) {
+							vectorEnlace.remove(i);
 						}
 					}
-					lienzo.g.elimiarEnlace(valorA, valorB);
+					g.elimiarEnlace(valorA, valorB);
 					lienzo.repaint();
 					JOptionPane.showMessageDialog(null, "Enlace Borrado");
 					
@@ -317,9 +333,9 @@ public class VentanaPrincipal {
 				int option = JOptionPane.showConfirmDialog(null, "SE ELIMINARAN LOS DATOS \nESTA SEGURO DE LIMPIAR EL LIENZO");
 				//System.out.println(lienzo.vertices);
 				if(option ==0) {
-					lienzo.g.eliminarGrafo(lienzo.vertices);
-					lienzo.vectorEnlace.clear();
-					lienzo.vectorNodos.clear();
+					g.eliminarGrafo(vertices);
+					vectorEnlace.clear();
+					vectorNodos.clear();
 					lienzo.repaint();
 					JOptionPane.showMessageDialog(null, "EL GRAFO HA SIDO ELIMINADO");
 					//System.out.println(lienzo.vertices);
@@ -344,7 +360,7 @@ public class VentanaPrincipal {
 				int iddGrafo = grafo.insertGrafo();
 				System.out.println("El ultimo Id es: "+iddGrafo);
 				
-				for(Nodo nodo: lienzo.vectorNodos) {
+				for(Nodo nodo: vectorNodos) {
 					
 					NodoBDD nodoBDD = new NodoBDD();
 					nodoBDD.setX(nodo.getX());
@@ -365,7 +381,7 @@ public class VentanaPrincipal {
 				ArrayList<NodoBDD>lista= consultaNodo .getNodoByGrafoId();
 				//System.out.println(lista);
 				System.out.println("");
-				for(Enlace enlace: lienzo.vectorEnlace) {
+				for(Enlace enlace: vectorEnlace) {
 					
 					EnlaceBDD enlaceBDD = new EnlaceBDD();
 					enlaceBDD.setX1(enlace.getX1());
@@ -438,10 +454,10 @@ public class VentanaPrincipal {
 				JOptionPane.showMessageDialog(null, comboBox, "SELECCIONE UN ARCHIVO", 1);
 				
 				
-				lienzo.vectorEnlace.clear();
-				lienzo.vectorNodos.clear();
-				lienzo.g.eliminarGrafo(lienzo.vertices);
-				lienzo.vertices.clear();
+				vectorEnlace.clear();
+				vectorNodos.clear();
+				g.eliminarGrafo(vertices);
+				vertices.clear();
 				
 				NodoBDD nodoBDD = new NodoBDD();
 				nodoBDD.setIdGrafo(index);
@@ -455,9 +471,9 @@ public class VentanaPrincipal {
 				
 				for(NodoBDD nodoGraphic: listnodoBDD) {
 					
-					lienzo.vertices.add(nodoGraphic.getNombre());
-					lienzo.aux = new HashMap<String,Integer>();
-					lienzo.g.crearVertice(nodoGraphic.getNombre(), lienzo.aux);
+					vertices.add(nodoGraphic.getNombre());
+					aux = new HashMap<String,Integer>();
+					g.crearVertice(nodoGraphic.getNombre(), aux);
 					
 					Nodo nodo = new Nodo();
 					
@@ -469,7 +485,7 @@ public class VentanaPrincipal {
 									nodoGraphic.getColorGreen(),
 									nodoGraphic.getColorBlue()));
 					
-					lienzo.vectorNodos.add(nodo);
+					vectorNodos.add(nodo);
 					
 				}
 				
@@ -492,16 +508,16 @@ public class VentanaPrincipal {
 					Nodo nodoAuxFin = null;
 					int indexNodoAuxInicio = 0;
 					int indexNodoAuxFin = 0;
-					for(int i=0;i<lienzo.vectorNodos.size();i++) {
-						if(lienzo.vectorNodos.get(i).getNombre().equals(nodoInicioBDD.getNombre())) {
-							nodoAuxInicio= lienzo.vectorNodos.get(i);
+					for(int i=0;i<vectorNodos.size();i++) {
+						if(vectorNodos.get(i).getNombre().equals(nodoInicioBDD.getNombre())) {
+							nodoAuxInicio= vectorNodos.get(i);
 							indexNodoAuxInicio = i;
 						}
 					}
 					
-					for(int i=0;i<lienzo.vectorNodos.size();i++) {
-						if(lienzo.vectorNodos.get(i).getNombre().equals(nodoFinBDD.getNombre())) {
-							nodoAuxFin = lienzo.vectorNodos.get(i);
+					for(int i=0;i<vectorNodos.size();i++) {
+						if(vectorNodos.get(i).getNombre().equals(nodoFinBDD.getNombre())) {
+							nodoAuxFin = vectorNodos.get(i);
 							indexNodoAuxFin = i;
 						}
 						
@@ -522,10 +538,10 @@ public class VentanaPrincipal {
 					System.out.println("LA VARIABLE ES: "+enlaceBDD.getNroActividadNodoInicio());
 					enlace.setNroActividadNodoInicio(enlaceBdd.getNroActividadNodoInicio());
 					enlace.setNroActividadNodoFin(enlaceBdd.getNroActividadNodoFin());
-					lienzo.vectorEnlace.add(enlace);
+					vectorEnlace.add(enlace);
 					
-					lienzo.aux = lienzo.g.getVertice(nodoAuxInicio.getNombre());
-					lienzo.aux.put(nodoAuxFin.getNombre(),enlaceBdd.getAtributo());
+					aux = g.getVertice(nodoAuxInicio.getNombre());
+					aux.put(nodoAuxFin.getNombre(),enlaceBdd.getAtributo());
 					
 				}
 				lienzo.repaint();
@@ -542,15 +558,15 @@ public class VentanaPrincipal {
 		btnNewButton_1_3_2_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 
-				for(Enlace enlace:lienzo.vectorEnlace){
+				for(Enlace enlace:vectorEnlace){
 					enlace.setJohnson(true);
 				}
 
 				//System.out.println(lienzo.vectorNodos);
 				//System.out.println(lienzo.vectorEnlace);
 				Johnson johnson = new Johnson();
-				johnson.setEnlaces(lienzo.vectorEnlace);
-				johnson.setNodos(lienzo.vectorNodos);
+				johnson.setEnlaces(vectorEnlace);
+				johnson.setNodos(vectorNodos);
 				johnson.eject();
 				//System.out.println(lienzo.vectorNodos);
 				//System.out.println(lienzo.vectorEnlace);
@@ -567,34 +583,30 @@ public class VentanaPrincipal {
 
 
 		JButton btnAsignacion = new JButton("ASIGNACION");
+
+		VentanaPrincipal auxVentanaPrincipal = this;
+
+
 		btnAsignacion.addActionListener(new ActionListener() {
+
 			public void actionPerformed(ActionEvent arg0) {
+				System.out.println("ASIGNACION");
 
-				isAsignacion=true;
-				if(lienzo.vectorNodos.isEmpty() && lienzo.vectorEnlace.isEmpty()){
+				String  stringValOrigen = JOptionPane.showInputDialog("INTRODUCE EL MAXIMO DE NODOS DE ORIGEN");
+				int valOrigen = Integer.parseInt(stringValOrigen);
 
-					String  stringValOrigen = JOptionPane.showInputDialog("INTRODUCE EL MAXIMO DE NODOS DE ORIGEN");
-					int valOrigen = Integer.parseInt(stringValOrigen);
-					JOptionPane.showMessageDialog(null,"PORFAVOR INGRESE LOS "+valOrigen+" NODOS DE ORIGEN");
-					if(lienzo.vectorNodos.size()==valOrigen){
-						String  stringValDestino = JOptionPane.showInputDialog("INTRODUCE EL MAXIMO DE NODOS DE DESTINO");
-						int valDestino = Integer.parseInt(stringValOrigen);
-						JOptionPane.showMessageDialog(null,"PORFAVOR INGRESE LOS "+valDestino+" NODOS DE DESTINO");
-					}
+				String  stringValDestino = JOptionPane.showInputDialog("INTRODUCE EL MAXIMO DE NODOS DE DESTINO");
+				int valDestino = Integer.parseInt(stringValDestino);
 
+				frame.getContentPane().remove(lienzo);
+				frame.repaint();
 
+				System.out.println("EL TAMAÑO ES: "+frame.getContentPane().getComponents().length);
+				lienzoAsignacion = new LienzoAsignacion(auxVentanaPrincipal,valOrigen,valDestino);
 
-
-
-
-					System.out.println("SE EJECUTARA EL ALGORITMO DE JOHNSON");
-				}else{
-					JOptionPane.showMessageDialog(null,"NO SE DEBEN TENER ELEMENTOS EN PANTALLA PARA REALIZAR ESTA ACCION");
-				}
-
-
-
-
+				lienzoAsignacion.setBounds(0, 0, 864, 500);
+				frame.getContentPane().add(lienzoAsignacion);
+				lienzoAsignacion.repaint();
 
 			}
 		});
@@ -611,6 +623,30 @@ public class VentanaPrincipal {
 		
 		
 	}
+
+	public Object[][] retornoMatriz(){
+
+		int tam=vertices.size();
+		Object mat[][]=new Object[tam][tam];
+
+		for(int i=0;i<vertices.size();i++) {
+
+			for(int j=0;j<vertices.size();j++) {
+
+				if(g.getVertice(vertices.get(i)).get(vertices.get(j))==null){
+					//System.out.print(0+"\t");
+					mat[i][j] = 0;
+				}else {
+					//System.out.print(g.getVertice(vertices.get(i)).get(vertices.get(j))+"\t");
+					mat[i][j] = g.getVertice(vertices.get(i)).get(vertices.get(j));
+				}
+			}
+		}
+
+		return mat;
+	}
+
+
 	/*****************
 	public HashMap<String, ArrayList<Integer>> saveListAtributos(){
 		HashMap<String, ArrayList<Integer>> listaAtributos = new HashMap();
